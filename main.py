@@ -1,7 +1,7 @@
-# https://www.kaggle.com/wolfram77/puzzlef-sum-openmp-adjust-schedule
+# https://www.kaggle.com/wolfram77/puzzlef-vector-atomic-access
 import os
 from IPython.display import FileLink
-src="sum-openmp-adjust-schedule"
+src="vector-atomic-access"
 out="{}.txt".format(src)
 !printf "" > "$out"
 display(FileLink(out))

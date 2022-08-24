@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-src="sum-openmp-adjust-schedule"
+src="vector-atomic-access"
 out="/home/resources/Documents/subhajit/$src.log"
 ulimit -s unlimited
 printf "" > "$out"
