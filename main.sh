@@ -10,5 +10,5 @@ git clone https://github.com/puzzlef/$src
 cd $src && echo ""
 
 # Run
-g++ -O3 -fopenmp main.cxx
+g++ -std=c++17 -O3 -fopenmp main.cxx
 stdbuf --output=L ./a.out 2>&1 | tee -a "$out"

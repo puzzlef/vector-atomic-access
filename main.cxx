@@ -1,67 +1,75 @@
-#include <cmath>
+#include <cstdint>
+#include <random>
 #include <vector>
-#include <string>
+#include <atomic>
 #include <cstdio>
+#include <omp.h>
 #include "src/main.hxx"
 
 using namespace std;
 
 
 
-#define TYPE float
 
-
-void runSum(int N, int repeat) {
-  vector<TYPE> x(N);
-  for (int i=0; i<N; i++) {
-    TYPE n = i+1;
-    x[i] = 1/(n*n);
+template <class T>
+int threadRun(vector<T>& x, int L) {
+  int a = 0;  // parity sum
+  random_device dev;
+  default_random_engine rnd(dev());
+  uniform_int_distribution<> idxDis(0, int(x.size()-1));
+  for (int l=0; l<L; ++l) {
+    int i = idxDis(rnd);
+    x[i] = randomWithSplitOddParity1<T>(rnd);
+    a += parity1(x[i]);
   }
+  return a;
+}
 
-  // Find Σx using a single thread.
-  auto a0 = sumSeq(x, {repeat});
-  printf("[%09.3f ms] [%f] sumSeq\n", a0.time, a0.result);
 
-  // Find x*y accelerated using OpenMP.
-  int maxThreads = omp_get_max_threads();
-  for (int i=0;; i++) {
-    bool done = false;
-    int threads = 1<<(i/2) + (i&1)<<(i/4);
-    if (threads>maxThreads) { threads = maxThreads;  done = true; }
-    // Use static schedule.
-    for (int chunkSize=64; chunkSize<=65536; chunkSize*=2) {
-      auto a1 = sumOpenmp(x, {repeat, threads, omp_sched_static, chunkSize});
-      printf("[%09.3f ms] [%f] sumOpenmp [%d threads; schedule static %d]\n", a1.time, a1.result, threads, chunkSize);
-    }
+template <class T>
+void runWithTypeAndSize(int size, int accesses, int numThreads, int repeat, const char *name) {
+  vector<T>   sharedData(size);
+  vector<int> paritySum(numThreads);
+  float t = measureDuration([&]() {
+    fillValueU(sharedData, T());
+    #pragma omp parallel for schedule(static, 1)
+    for (int t=0; t<numThreads; ++t)
+      paritySum[t] = threadRun(sharedData, accesses);
+  }, repeat);
+  float totalParitySum = float(sumValues(paritySum)) / repeat;
+  printf("[%09.3f ms; %.1f par_sum] %s {accesses=%d}\n", t, totalParitySum, name, accesses);
+}
 
-    // Use dynamic schedule.
-    for (int chunkSize=64; chunkSize<=65536; chunkSize*=2) {
-      auto a2 = sumOpenmp(x, {repeat, threads, omp_sched_dynamic, chunkSize});
-      printf("[%09.3f ms] [%f] sumOpenmp [%d threads; schedule dynamic %d]\n", a2.time, a2.result, threads, chunkSize);
-    }
+template <class T>
+void runWithType(int accesses, int numThreads, int repeat, const char *name) {
+  for (int N=32; N<=1024; N*=2)
+    runWithType<T>(N, accesses, numThreads, repeat, name);
+}
 
-    // Use guided schedule.
-    for (int chunkSize=64; chunkSize<=65536; chunkSize*=2) {
-      auto a3 = sumOpenmp(x, {repeat, threads, omp_sched_guided, chunkSize});
-      printf("[%09.3f ms] [%f] sumOpenmp [%d threads; schedule guided %d]\n", a3.time, a3.result, threads, chunkSize);
-    }
 
-    // Use auto schedule.
-    for (int chunkSize=64; chunkSize<=65536; chunkSize*=2) {
-      auto a4 = sumOpenmp(x, {repeat, threads, omp_sched_auto, chunkSize});
-      printf("[%09.3f ms] [%f] sumOpenmp [%d threads; schedule auto %d]\n", a4.time, a4.result, threads, chunkSize);
-    }
-    if (done) break;
-  }
+void runExperiment(int repeat) {
+  int maxThreads = 12;
+  int accesses   = 1000000000;
+  omp_set_num_threads(maxThreads);
+  printf("OMP_NUM_THREADS=%d\n", maxThreads);
+  runWithType<uint32_t>(accesses, maxThreads, repeat, "access32Default");
+  runWithType<atomic<uint32_t>>(accesses, maxThreads, repeat, "access32Atomic");
+  runWithType<uint64_t>(accesses, maxThreads, repeat, "access64Default");
+  runWithType<atomic<uint64_t>>(accesses, maxThreads, repeat, "access64Atomic");
+  runWithType<array<uint64_t, 2>>(accesses, maxThreads, repeat, "access128Default");
+  runWithType<atomic<array<uint64_t, 2>>>(accesses, maxThreads, repeat, "access128Atomic");
+  runWithType<array<uint64_t, 4>>(accesses, maxThreads, repeat, "access256Default");
+  runWithType<atomic<array<uint64_t, 4>>>(accesses, maxThreads, repeat, "access256Atomic");
+  runWithType<array<uint64_t, 8>>(accesses, maxThreads, repeat, "access512Default");
+  runWithType<atomic<array<uint64_t, 8>>>(accesses, maxThreads, repeat, "access512Atomic");
+  runWithType<array<uint64_t, 16>>(accesses, maxThreads, repeat, "access1024Default");
+  runWithType<atomic<array<uint64_t, 16>>>(accesses, maxThreads, repeat, "access1024Atomic");
 }
 
 
 int main(int argc, char **argv) {
   int repeat = argc>1? stoi(argv[1]) : 5;
-  for (int n=1000000; n<=1000000000; n*=10) {
-    printf("# Elements %.0e\n", (double) n);
-    runSum(n, repeat);
-    printf("\n");
-  }
+  runExperiment(repeat);
+  printf("\n");
   return 0;
 }

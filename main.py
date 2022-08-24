@@ -13,5 +13,5 @@ display(FileLink(out))
 !echo ""
 
 # Run
-!g++ -O3 -fopenmp $src/main.cxx
+!g++ -std=c++17 -O3 -fopenmp $src/main.cxx
 !ulimit -s unlimited && stdbuf --output=L ./a.out 2>&1 | tee -a "$out"
