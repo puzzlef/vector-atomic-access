@@ -2,8 +2,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const RELEMS = /^# Elements (.+)/m;
-const RRESLT = /^\[(.+?) ms\] \[(.+?)\] (\w+)(?: \[(\d+) threads; schedule (\w+) (\d+)\])?/m;
+const RTHRDS = /^OMP_NUM_THREADS=(\d+)/m;
+const RRESLT = /^\[(.+?) ms; (.+?) par_sum\]\s+([a-zA-Z]+)(\d+)([a-zA-Z]+)\s+\{size=(\d+)\}/m;
 
 
 
@@ -42,21 +42,20 @@ function writeCsv(pth, rows) {
 // -----
 
 function readLogLine(ln, data, state) {
-  if (RELEMS.test(ln)) {
-    var [, elements] = RELEMS.exec(ln);
-    var elements = parseFloat(elements);
-    if (!data.has(elements)) data.set(elements, []);
-    state = {elements};
+  if (RTHRDS.test(ln)) {
+    var [, omp_num_threads] = RTHRDS.exec(ln);
+    var omp_num_threads = parseFloat(omp_num_threads);
+    if (!data.has(omp_num_threads)) data.set(omp_num_threads, []);
+    state = {omp_num_threads};
   }
   else if (RRESLT.test(ln)) {
-    var [, time, sum, technique, num_threads, schedule_kind, chunk_size] = RRESLT.exec(ln);
-    data.get(state.elements).push(Object.assign({}, state, {
-      time:       parseFloat(time),
-      sum:        parseFloat(sum),
-      technique,
-      num_threads:   parseFloat(num_threads||'0'),
-      schedule_kind: schedule_kind||'',
-      chunk_size:    parseFloat(chunk_size||'0')
+    var [, time, parity_sum, technique_1, element_bits, technique_2, vector_size] = RRESLT.exec(ln);
+    data.get(state.omp_num_threads).push(Object.assign({}, state, {
+      time:         parseFloat(time),
+      parity_sum:   parseFloat(parity_sum),
+      technique:    technique_1 + technique_2,
+      element_bits: parseFloat(element_bits),
+      vector_size:  parseFloat(vector_size),
     }));
   }
   return state;
