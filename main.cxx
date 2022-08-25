@@ -46,7 +46,7 @@ void runWithTypeAndSize(int size, int accesses, int numThreads, int repeat, cons
 
 template <class V>
 void runWithType(int accesses, int numThreads, int repeat, const string& name) {
-  for (int N=32; N<=1024; N*=2) {
+  for (int N=1; N<=32; N*=2) {
     runWithTypeAndSize<V, V>(N, accesses, numThreads, repeat, name+"Default");
     runWithTypeAndSize<atomic<V>, V>(N, accesses, numThreads, repeat, name+"Atomic ");
   }
@@ -54,18 +54,20 @@ void runWithType(int accesses, int numThreads, int repeat, const string& name) {
 
 
 void runExperiment(int repeat) {
-  int maxThreads = 12;
+  int maxThreads = 48;
   int accesses   = 1000000;
   omp_set_num_threads(maxThreads);
   printf("OMP_NUM_THREADS=%d\n", maxThreads);
   runWithType<uint32_t>(accesses, maxThreads, repeat, "access32");
   runWithType<uint64_t>(accesses, maxThreads, repeat, "access64");
-  runWithType<array<uint64_t, 2>> (accesses, maxThreads, repeat, "access128");
-  runWithType<array<uint64_t, 4>> (accesses, maxThreads, repeat, "access256");
-  runWithType<array<uint64_t, 8>> (accesses, maxThreads, repeat, "access512");
-  runWithType<array<uint64_t, 16>>(accesses, maxThreads, repeat, "access1024");
-  runWithType<array<uint64_t, 32>>(accesses, maxThreads, repeat, "access2048");
-  runWithType<array<uint64_t, 64>>(accesses, maxThreads, repeat, "access4096");
+  runWithType<array<uint64_t, 2>>  (accesses, maxThreads, repeat, "access128");
+  runWithType<array<uint64_t, 4>>  (accesses, maxThreads, repeat, "access256");
+  runWithType<array<uint64_t, 8>>  (accesses, maxThreads, repeat, "access512");
+  runWithType<array<uint64_t, 16>> (accesses, maxThreads, repeat, "access1024");
+  runWithType<array<uint64_t, 32>> (accesses, maxThreads, repeat, "access2048");
+  runWithType<array<uint64_t, 64>> (accesses, maxThreads, repeat, "access4096");
+  runWithType<array<uint64_t, 128>>(accesses, maxThreads, repeat, "access8192");
+  runWithType<array<uint64_t, 256>>(accesses, maxThreads, repeat, "access16384");
 }
 
 

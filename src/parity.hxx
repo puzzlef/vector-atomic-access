@@ -71,9 +71,14 @@ T randomWithParity1(const T& _, R& rnd, int p) {
 
 template <class R, class T>
 void randomWithParity1W(T *a, size_t N, R& rnd, int p) {
-  if (N>0) a[0] = randomWithParity1(T(), rnd, p);
-  for (size_t i=1; i<N; ++i)
-    a[i] = randomWithParity1(T(), rnd, 0);
+  int q = 0;
+  uniform_int_distribution<T> valDis(0, numeric_limits<T>::max());
+  uniform_int_distribution<>  idxDis(0, N-1);
+  for (size_t i=0; i<N; ++i) {
+    a[i] = valDis(rnd);
+    q   ^= parity1(a[i]);
+  }
+  if (q!=p) a[idxDis(rnd)] ^= 1;
 }
 
 template <class R, class T, size_t N>
