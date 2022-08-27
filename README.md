@@ -86,6 +86,7 @@ $ ./a.out
 <br>
 
 [![](https://i.imgur.com/INKPsi2.jpg)](https://www.youtube.com/watch?v=fDubIYr4qTA)<br>
+[![DOI](https://zenodo.org/badge/528498627.svg)](https://zenodo.org/badge/latestdoi/528498627)
 
 
 [Prof. Dip Sankar Banerjee]: https://sites.google.com/site/dipsankarban/
