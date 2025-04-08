@@ -88,7 +88,7 @@ $ ./a.out
 [![](https://i.imgur.com/INKPsi2.jpg)](https://www.youtube.com/watch?v=fDubIYr4qTA)<br>
 [![ORG](https://img.shields.io/badge/org-puzzlef-green?logo=Org)](https://puzzlef.github.io)
 [![DOI](https://zenodo.org/badge/528498627.svg)](https://zenodo.org/badge/latestdoi/528498627)
-
+![](https://ga-beacon.deno.dev/G-KD28SG54JQ:hbAybl6nQFOtmVxW4if3xw/github.com/puzzlef/vector-atomic-access)
 
 [Prof. Dip Sankar Banerjee]: https://sites.google.com/site/dipsankarban/
 [Prof. Kishore Kothapalli]: https://faculty.iiit.ac.in/~kkishore/
